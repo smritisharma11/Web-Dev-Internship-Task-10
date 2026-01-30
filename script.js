@@ -1,59 +1,49 @@
-const form = document.getElementById('registration-form');
+// 1. Select the HTML elements from the DOM (Hint 2)
+const fetchBtn = document.getElementById('fetch-btn');
+const quoteText = document.getElementById('quote-text');
+const quoteAuthor = document.getElementById('quote-author');
+const loader = document.getElementById('loader');
 
-// Reusable validation functions (Hint 9)
-const showError = (input, msg, errorId) => {
-    input.classList.add('invalid');
-    input.classList.remove('valid');
-    document.getElementById(errorId).textContent = msg;
-};
+/**
+ * 2. Asynchronous function to fetch a random quote (Hint 3 & 9)
+ * We use async/await for cleaner asynchronous logic.
+ */
+async function getRandomQuote() {
+    // Show the loading indicator while data is being fetched (Hint 7)
+    loader.style.display = 'block';
+    quoteText.textContent = "Fetching your inspiration...";
+    quoteAuthor.textContent = "";
 
-const showSuccess = (input, errorId) => {
-    input.classList.remove('invalid');
-    input.classList.add('valid');
-    document.getElementById(errorId).textContent = "";
-};
+    try {
+        // 3. Send HTTP request to a reliable public API (Hint 1)
+        // Note: Using dummyjson.com as it is more stable than quotable.io
+        const response = await fetch('https://dummyjson.com/quotes/random');
+        
+        // 4. Check if the response is successful (Hint 6)
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-// Validation logic using RegEx (Hint 3)
-const validateEmail = (email) => {
-    return String(email).toLowerCase().match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-};
+        // 5. Convert the response to JSON format (Hint 4)
+        const data = await response.json();
 
-// Event listener for form submission (Hint 5)
-form.addEventListener('submit', (e) => {
-    let isValid = true;
+        // 6. Update the UI with the fetched data (Hint 5)
+        // DummyJSON returns an object with 'quote' and 'author'
+        quoteText.textContent = `"${data.quote}"`;
+        quoteAuthor.textContent = `- ${data.author}`;
+        
+        // Log to console for debugging (Hint 8)
+        console.log("Data successfully fetched:", data);
 
-    // Validate Name
-    const name = document.getElementById('username');
-    if (name.value.trim().length < 3) {
-        showError(name, "Name must be at least 3 characters.", 'name-error');
-        isValid = false;
-    } else { showSuccess(name, 'name-error'); }
-
-    // Validate Email
-    const email = document.getElementById('email');
-    if (!validateEmail(email.value)) {
-        showError(email, "Please enter a valid email address.", 'email-error');
-        isValid = false;
-    } else { showSuccess(email, 'email-error'); }
-
-    // Validate Password
-    const pass = document.getElementById('password');
-    if (pass.value.length < 8) {
-        showError(pass, "Password must be at least 8 characters.", 'pass-error');
-        isValid = false;
-    } else { showSuccess(pass, 'pass-error'); }
-
-    // Confirm Password check
-    const confirm = document.getElementById('confirm-pass');
-    if (confirm.value !== pass.value || confirm.value === "") {
-        showError(confirm, "Passwords do not match.", 'confirm-error');
-        isValid = false;
-    } else { showSuccess(confirm, 'confirm-error'); }
-
-    // Prevent default browser action if invalid (Hint 5)
-    if (!isValid) {
-        e.preventDefault();
-    } else {
-        alert("Form validated successfully!");
+    } catch (error) {
+        // 7. Handle errors like network failure or invalid URLs (Hint 6)
+        quoteText.textContent = "Error: Could not load data. Please check your internet.";
+        console.error("Fetch error details:", error);
+    } finally {
+        // 8. Hide the loader once the request is finished
+        loader.style.display = 'none';
     }
-});
+}
+
+// 9. Add event listener for the button click (Hint 4)
+fetchBtn.addEventListener('click', getRandomQuote);
